@@ -72,6 +72,7 @@ export default function DrawPage() {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
   const [texts, setTexts] = useState<TextBox[]>([]);
+  const lastPanPointRef = useRef<{ x: number; y: number } | null>(null);
 
   const [undoStack, setUndoStack] = useState<HistorySnapshot[]>([]);
   const [redoStack, setRedoStack] = useState<HistorySnapshot[]>([]);
@@ -260,7 +261,7 @@ export default function DrawPage() {
 
     if (mode === "pan") {
       (e.target as Element).setPointerCapture(e.pointerId);
-      setLastPanPoint({ x: e.clientX, y: e.clientY });
+      lastPanPointRef.current = { x: e.clientX, y: e.clientY };
       return;
     }
 
@@ -315,11 +316,11 @@ export default function DrawPage() {
       return;
     }
 
-    if (mode === "pan" && lastPanPoint) {
-      const dx = e.clientX - lastPanPoint.x;
-      const dy = e.clientY - lastPanPoint.y;
+    if (mode === "pan" && lastPanPointRef.current) {
+      const dx = e.clientX - lastPanPointRef.current.x;
+      const dy = e.clientY - lastPanPointRef.current.y;
       setCamera((prev) => ({ ...prev, x: prev.x + dx, y: prev.y + dy }));
-      setLastPanPoint({ x: e.clientX, y: e.clientY });
+      lastPanPointRef.current = { x: e.clientX, y: e.clientY };
       return;
     }
 
@@ -337,7 +338,7 @@ export default function DrawPage() {
     }
 
     if (mode === "pan") {
-      setLastPanPoint(null);
+      lastPanPointRef.current = null;
     }
 
     if (isDrawing) {
@@ -468,7 +469,7 @@ export default function DrawPage() {
 
   return (
     <div
-      className="relative w-screen h-screen overflow-hidden bg-background touch-none"
+      className="relative w-screen h-[100dvh] overflow-hidden bg-background touch-none"
       onPointerMove={isLoaded ? handleWrapperPointerMove : undefined}
       onPointerUp={isLoaded ? handleWrapperPointerUp : undefined}
       onPointerCancel={isLoaded ? handleWrapperPointerUp : undefined}
